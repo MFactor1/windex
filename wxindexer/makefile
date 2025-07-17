@@ -11,11 +11,14 @@ BUILD:=buildx build
 BUILD_FLAGS:=
 RUN:=run
 RUN_FLAGS:=--rm
-PROJECT_NAME:=unpackers
+PROJECT_NAME:=wxindexer
 PROJECT_DIR:=$(TOP_LEVEL_DIR)/$(PROJECT_NAME)
 BUILD_TAG:=$(PROJECT_NAME)
 UID:=$(shell id -u)
 USERNAME:=$(shell whoami)
+
+BUILD_DEPS+=github.com/vmihailenco/msgpack/v5
+BUILD_DEPS+=common@v0.0.0
 
 .PHONY: build
 build:

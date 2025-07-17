@@ -7,6 +7,11 @@ import (
 	"io"
 	"os"
 	"strings"
+	"net"
+	"net/url"
+	"time"
+	"github.com/vmihailenco/msgpack/v5"
+	"common"
 )
 
 type Page struct {
@@ -16,6 +21,15 @@ type Page struct {
 }
 
 func main() {
+	addr := "/tmp/windexIPC.sock"
+	connection, err := net.Dial("unix", addr)
+	if err != nil {
+		panic(err)
+	}
+	defer connection.Close()
+
+	encoder := msgpack.NewEncoder(connection)
+
 	//countPages("/run/media/matthewnesbitt/Linux 1TB SSD/WikiDump/enwiki-20250320-pages-articles-multistream.xml")
 	file, err := os.Open("/run/media/matthewnesbitt/Linux 1TB SSD/WikiDump/enwiki-20250320-pages-articles-multistream.xml")
 	if err != nil {
@@ -29,6 +43,7 @@ func main() {
 	var page Page
 	var i = 0
 	var diff = 0
+	var wait int64 = 0
 
 	for {
 		tok, err := decoder.Token()
@@ -43,13 +58,27 @@ func main() {
 				if t.Name.Local == "page" {
 					page = Page{}
 					decoder.DecodeElement(&page, &t)
-					if page.Namespace != "0" || strings.HasPrefix(page.Text, "#REDIRECT") || page.Title == "" {
+					if page.Namespace == "0" && !strings.HasPrefix(page.Text, "#REDIRECT") && page.Title != "" {
 						if diff >= 1000 {
-							fmt.Println("Processed:", i)
+							fmt.Println("wxunpacker: Processed:", i)
+							fmt.Println("wxunpacker: avg send wait time:", wait / 1000)
 							diff = 0
+							wait = 0
 						}
 						diff++
 						i++
+
+						url_title := strings.ReplaceAll(page.Title, " ", "_")
+						url_data := "https://en.wikipedia.org/wiki/" + url.PathEscape(url_title)
+						data := common.PageData{URL: url_data, Body: page.Text}
+						start := time.Now()
+						err := encoder.Encode(data)
+						wait = time.Since(start).Microseconds() + wait
+						if err != nil {
+							panic(err)
+						}
+						fmt.Println(page.Text)
+						return
 					}
 				}
 		default:

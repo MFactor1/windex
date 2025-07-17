@@ -1,5 +1,7 @@
 module wxcrawler
 
+replace common => ../common
+
 go 1.24.4
 
 require (
