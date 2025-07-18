@@ -70,15 +70,14 @@ func main() {
 
 						url_title := strings.ReplaceAll(page.Title, " ", "_")
 						url_data := "https://en.wikipedia.org/wiki/" + url.PathEscape(url_title)
-						data := common.PageData{URL: url_data, Body: page.Text}
+						data := common.PageData{Title: page.Title, URL: url_data, Body: page.Text}
 						start := time.Now()
 						err := encoder.Encode(data)
 						wait = time.Since(start).Microseconds() + wait
 						if err != nil {
 							panic(err)
 						}
-						fmt.Println(page.Text)
-						return
+						//fmt.Println(page.Text)
 					}
 				}
 		default:

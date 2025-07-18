@@ -18,6 +18,7 @@ UID:=$(shell id -u)
 USERNAME:=$(shell whoami)
 
 BUILD_DEPS+=github.com/vmihailenco/msgpack/v5
+BUILD_DEPS+=github.com/redis/go-redis/v9
 BUILD_DEPS+=common@v0.0.0
 
 .PHONY: build
@@ -41,7 +42,10 @@ build:
 
 .PHONY: run
 run: build
+	make -C $(PROJECT_DIR)/redis clean
+	make -C $(PROJECT_DIR)/redis start
 	$(PROJECT_DIR)/build/$(PROJECT_NAME)
+	make -C $(PROJECT_DIR)/redis stop
 
 .PHONY: clean
 clean:

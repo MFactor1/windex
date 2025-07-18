@@ -30,7 +30,7 @@ var (
 	reNonAlphanumeric    = regexp.MustCompile(`[^a-zA-Z0-9\s]+`)
 	reExtraWhitespace    = regexp.MustCompile(`[ \t]+`)
 	reWhitespaceLines    = regexp.MustCompile(`(?m)^[ \t\r\f\v]+$`)
-	reMultipleNewlines   = regexp.MustCompile(`\n{2,}`)
+	reMultipleNewlines   = regexp.MustCompile(`\n`)
 	invalidPrefixes      = get_invalid_namespaces()
 	linkPrefix 			 = "https://en.wikipedia.org/wiki/"
 )
@@ -93,7 +93,7 @@ func (v *WikipediaCleaner) Clean(text string) containers.Doc {
 	// Remove excessive whitespace
 	text = reExtraWhitespace.ReplaceAllString(text, " ")
 	text = reWhitespaceLines.ReplaceAllString(text, "")
-	text = reMultipleNewlines.ReplaceAllString(text, "\n\n")
+	text = reMultipleNewlines.ReplaceAllString(text, "")
 
 	// Lowercase everything
 	text = strings.ToLower(text)
@@ -102,6 +102,7 @@ func (v *WikipediaCleaner) Clean(text string) containers.Doc {
 }
 
 func get_invalid_namespaces() *containers.Set {
+	fmt.Println("wxindexer/cleaner: fetching invalid namespaces")
 	url := "https://en.wikipedia.org/w/api.php?action=query&meta=siteinfo&siprop=namespaces&format=json"
 
 	resp, err := http.Get(url)
@@ -130,7 +131,6 @@ func get_invalid_namespaces() *containers.Set {
 		if nsMap, ok := namespace.(map[string]any); ok {
 			if name, exists := nsMap["*"]; exists && name != "" {
 				invalid_namespaces.Add(name.(string))
-				fmt.Printf("Found invalid namespace: %s\n", name)
 			}
 		}
 	}
